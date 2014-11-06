@@ -11,7 +11,7 @@ create_previous_dirSync(previous_dir())
 
 
 //npm.config skip_post_install =true
-if (fs.existsSync(periodic_cwd)){
+if (fs.existsSync(periodic_cwd) || fs.existsSync( previous_dir() ) ){
   console.log("Periodic Installed!");
 }else{
   npm.load({
@@ -21,13 +21,13 @@ if (fs.existsSync(periodic_cwd)){
     if (err) {
       throw err
     }
+    npm.config.set("skip_post_install", true);
     npm.commands.install([periodic_version], function (err, data) {
-      npm.config.set("skip_post_install", true)
       if (err) {
         throw err
       }
-      //copyExt();
-   //   readPeerDeps();
+      copyExt();
+      readPeerDeps();
       //read package.json for peer deps and installed those deps 
       //copy the current ext into the node_modules folder of the instance
     });
