@@ -1,16 +1,35 @@
-var expect = require('chai').expect,
-	path = require('path'),
-	chai = require('chai'),
-	child = require('child_process'),
-	nexpect = require('nexpect'),
+var expect     = require('chai').expect,
+	path         = require('path'),
+	chai         = require('chai'),
+  fs           = require('fs-extra'),
+	child        = require('child_process'),
+	nexpect      = require('nexpect'),
 	previous_dir = require('./periodic_instance').previous_dir,
-	remove_dir = require('./periodic_instance').remove_previous_dirSync,
-	stubCWD = path.resolve(previous_dir(), 'periodic_Stub/node_modules/periodicjs/');
-context = describe;
-chai.use(require('chai-fs'))
+	remove_dir   = require('./periodic_instance').remove_previous_dirSync,
+	stubCWD      = path.resolve(previous_dir(), 'periodic_Stub/node_modules/periodicjs/');
+  context      = describe;
+  chai.use(require('chai-fs'))
 
-describe('The periodic Stub', function () {
+describe('Periodic Stub: ', function () {
 
+  before(function (done) {
+    var install = 'node ' + path.resolve(process.cwd(), 'test/helpers/periodic_instance.js');
+    child.exec(install, function (error, stdout, stderr) {
+      if (error) done(error);
+      process.stdout.write(stdout);
+    })
+    done();
+  });
+
+  after(function(done){
+    fs.remove(previous_dir(),function(err) {
+      if(err) {
+        return done(err)
+      }else{
+        done();
+      }
+    })
+  });
 	context('folder management of for the install process', function () {
 		it('should have a stub folder in the previous directory', function (done) {
 			expect(previous_dir()).to.be.a.directory('periodic_Stub')
@@ -22,20 +41,7 @@ describe('The periodic Stub', function () {
 		});
 	})
 
-	context('The npm install process', function () {
-		this.timeout(9000);
-		before(function (done) {
-			var install = 'node ' + path.resolve(process.cwd(), 'test/helpers/periodic_instance.js');
-			child.exec(install, function (error, stdout, stderr) {
-				if (error) done(error);
-				process.stdout.write(stdout);
-			})
-			done();
-		});
-		after(function (done) {
-			remove_dir(previous_dir());
-			done();
-		});
+	context('Npm Install Process', function () {
 
 		it('should install the latest periodic', function (done) {
 			var periodic_direc = path.resolve(previous_dir(), 'node_modules/periodicjs/');
@@ -44,7 +50,7 @@ describe('The periodic Stub', function () {
 		});
 		it('should match the package.json name', function (done) {
 			var packageJson = path.resolve(previous_dir(), 'node_modules/periodicjs/package.json');
-			expect(packageJson).to.have.content.that.match(/periodicjs/);
+			expect(packageJson).to.be.a.file("It exists")
 			done()
 		});
 		xit('should start the server on the periodic folder', function (done) {

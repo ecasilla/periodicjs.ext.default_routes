@@ -1,10 +1,12 @@
 'use strict';
 
-var npm = require('npm'),
-	path = require('path'),
-	fs = require('fs-extra'),
-	async = require('async'),
-	child = require('child_process'),
+var npm        = require('npm'),
+	path         = require('path'),
+	fs           = require('fs-extra'),
+	async        = require('async'),
+	child        = require('child_process'),
+  currentExtensionName = '',
+
 	previous_dir = function() {
 		return path.resolve(process.cwd(), '../periodicjs_Stub');
 	},
@@ -14,7 +16,7 @@ var npm = require('npm'),
 	remove_previous_dirSync = function() {
 		return fs.removeSync(previous_dir());
 	},
-	periodic_cwd = path.resolve(previous_dir(), '/periodicjs/'),
+	periodic_cwd = path.resolve(previous_dir(), 'node_modules/periodicjs/'),
 	periodic_version,
 	currentExtensionPeerDependencies;
 
@@ -72,17 +74,37 @@ var installCorrectVersion = function(asyncCallback){
 };
 
 /**
+ * copy current extenion name for folder naming during copy
+ * @param  {Function} asyncCallback async callback function
+ */
+
+var getExtName = function(asyncCallback) {
+  var current_ext_package_json = path.resolve(process.cwd(),'package.json');
+  fs.readJson(current_ext_package_json,function(err,json) {
+    if(err){
+      asyncCallback(err,null);
+    }
+    else{
+      currentExtensionName = json.name
+      asyncCallback(null,currentExtensionName);
+    }
+  });
+}
+
+/**
  * copy current extenion to periodic stub
  * @param  {Function} asyncCallback async callback function
  */
 var copyExt = function(asyncCallback){
-	asyncCallback(null,'copied extension to stub');
-	//fs.copy(currentext,dirinperiodicstub,function(err){
-	//if(err){
-	//async(err)}
-	//else{
-	//async(null,'copied')}
-	//})
+	//asyncCallback(null,'copied extension to stub');
+  var node_modules = periodic_cwd + '/node_modules/' + currentExtensionName
+  fs.copy('.', node_modules,function(err) {
+    if (err) {
+     asyncCallback(err) 
+    }else{
+    asyncCallback(null,"copied extension to stub")
+    }
+  })
 };
 
 /**
@@ -97,7 +119,7 @@ var readPeerDeps = function(asyncCallback){
   	}
   	else{
 	  	currentExtensionPeerDependencies = json.peerDependencies; 
-	  	asyncCallback(err,'got extension peerDependencies');
+	  	asyncCallback(null,currentExtensionPeerDependencies);
   	}
   });
 };
@@ -106,7 +128,19 @@ var readPeerDeps = function(asyncCallback){
  * @param  {Function} asyncCallback async callback function
  */
 var installPeerDeps = function(asyncCallback){
-	asyncCallback(null,'installed extension peerDependencies');
+  asyncCallback(null,'installed extension peerDependencies');
+  //npm.commands.install([currentExtensionPeerDependencies], function (err, data) {
+    //if (err) {
+      //asyncCallback(err,null);
+    //}
+    //else{
+      //asyncCallback(null,data);
+    //}
+  //});
+  //npm.on('log', function (message) {
+    //// log the progress of the installation
+    //console.log(message);
+  //});
 };
 
 
@@ -171,13 +205,25 @@ function kill_server(pid, signal, callback) {
 	}
 };
 
+var clean = function(asyncCallback) {
+ fs.remove(previous_dir(),function(err) {
+   if (err) {
+    asyncCallback(err) 
+   }else{
+   asyncCallback(null,"Cleaned The Stub Directory");
+   }
+ }) 
+}
+
 async.series({
-		getPeriodicVersion:getExtPeriodicVer,
-		installCorrectVersion:installCorrectVersion,
-		copyExtentionToPeriodicStub:copyExt,
-		readExtensionPeerDependencies: readPeerDeps,
-		installExtPeerDeps: installPeerDeps,
-		startPeriodicStubServer: start_server
+    clean                         : clean,
+		getPeriodicVersion            : getExtPeriodicVer,
+		installCorrectVersion         : installCorrectVersion,
+    getCurrentExtName             : getExtName,
+		copyExtentionToPeriodicStub   : copyExt,
+		readExtensionPeerDependencies : readPeerDeps,
+		installExtPeerDeps            : installPeerDeps,
+		startPeriodicStubServer       : start_server
 	},
 	function(err,status){
 		if(err){
