@@ -1,11 +1,11 @@
 'use strict';
 
-var npm        = require('npm'),
-	path         = require('path'),
-	fs           = require('fs-extra'),
-	async        = require('async'),
-	child        = require('child_process'),
-  currentExtensionName = '',
+var npm                  = require('npm'),
+    path                 = require('path'),
+    fs                   = require('fs-extra'),
+    async                = require('async'),
+    child                = require('child_process'),
+    currentExtensionName = '',
 
 	previous_dir = function() {
 		return path.resolve(process.cwd(), '../periodicjs_Stub');
@@ -86,6 +86,7 @@ var getExtName = function(asyncCallback) {
     }
     else{
       currentExtensionName = json.name
+      console.log(currentExtensionName);
       asyncCallback(null,currentExtensionName);
     }
   });
@@ -112,14 +113,12 @@ var copyExt = function(asyncCallback){
  * @param  {Function} asyncCallback async callback function
  */
 var readPeerDeps = function(asyncCallback){
-  var current_ext_package_json = path.resolve(process.cwd(),'package.json');
+  var current_ext_package_json = path.resolve(process.cwd(),'./package.json');
   fs.readJson(current_ext_package_json,function(err,json) {
   	if(err){
-      console.log(typeof json.peerDependencies + '\n');
-      console.log(json.peerDependencies);
   		asyncCallback(err,null);
   	}
-    else if (!json.peerDependencies){
+    else if (!json.hasOwnProperty('peerDependencies')){
       asyncCallback(null,"No Peer Dependencies for this extension!")
     }
   	else{
@@ -145,6 +144,7 @@ var installPeerDeps = function(asyncCallback){
       asyncCallback(err) 
     }else{
       npm.config.set("skip_post_install",true)
+      console.log(currentExtensionPeerDependencies);
       npm.commands.install(currentExtensionPeerDependencies, function (err, data) {
         if (err) {
           asyncCallback(err,null);
@@ -170,14 +170,18 @@ var installPeerDeps = function(asyncCallback){
  * @todo try fork
  */
 var start_server = function(asyncCallback) {
- var server =  child.fork(null);
+
+var worker = path.resolve(process.cwd(),'test/helpers/periodic_worker'),
+    server = child.fork(worker,[],{cwd:periodic_cwd}),
+    start  = {command:"uptime"};
+
+ server.send(start);
   server.on('message',function(message) {
-    console.log('From periodic worker: ' +  message);
+   console.log('From periodic worker: ' +  message);
   });
-
-  server.send('npm run nd');
-
-  asyncCallback(null,'started periodicjs_Stub');
+  server.on('close',function() {
+   asyncCallback(null,"server finished") 
+  })
 };
 
 
@@ -223,9 +227,9 @@ var clean = function(callback) {
 async.series({
 		getPeriodicVersion            : getExtPeriodicVer,
 		installCorrectVersion         : installCorrectVersion,
+    readExtensionPeerDependencies : readPeerDeps,
     getCurrentExtName             : getExtName,
 		copyExtentionToPeriodicStub   : copyExt,
-		readExtensionPeerDependencies : readPeerDeps,
 		installExtPeerDeps            : installPeerDeps,
 		startPeriodicStubServer       : start_server
 	},
