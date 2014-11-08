@@ -18,7 +18,7 @@ var npm        = require('npm'),
 	},
 	periodic_cwd = path.resolve(previous_dir(), 'node_modules/periodicjs/'),
 	periodic_version,
-	currentExtensionPeerDependencies;
+	currentExtensionPeerDependencies = [];
 
 /**
  * gets the periodic version number from periodic.ext.json
@@ -115,10 +115,18 @@ var readPeerDeps = function(asyncCallback){
   var current_ext_package_json = path.resolve(process.cwd(),'package.json');
   fs.readJson(current_ext_package_json,function(err,json) {
   	if(err){
+      console.log(typeof json.peerDependencies + '\n');
+      console.log(json.peerDependencies);
   		asyncCallback(err,null);
   	}
+    else if (!json.peerDependencies){
+      asyncCallback(null,"No Peer Dependencies for this extension!")
+    }
   	else{
-	  	currentExtensionPeerDependencies = json.peerDependencies; 
+	  	var tempobj = json.peerDependencies; 
+      for(var ext in tempobj){
+       currentExtensionPeerDependencies.push(ext);
+      }
 	  	asyncCallback(null,currentExtensionPeerDependencies);
   	}
   });
@@ -128,19 +136,29 @@ var readPeerDeps = function(asyncCallback){
  * @param  {Function} asyncCallback async callback function
  */
 var installPeerDeps = function(asyncCallback){
-  asyncCallback(null,'installed extension peerDependencies');
-  //npm.commands.install([currentExtensionPeerDependencies], function (err, data) {
-    //if (err) {
-      //asyncCallback(err,null);
-    //}
-    //else{
-      //asyncCallback(null,data);
-    //}
-  //});
-  //npm.on('log', function (message) {
-    //// log the progress of the installation
-    //console.log(message);
-  //});
+  npm.load({
+  prefix:periodic_cwd,
+  skip_post_install: true
+  },
+  function(err) {
+    if (err) {
+      asyncCallback(err) 
+    }else{
+      npm.config.set("skip_post_install",true)
+      npm.commands.install(currentExtensionPeerDependencies, function (err, data) {
+        if (err) {
+          asyncCallback(err,null);
+        }
+        else{
+          asyncCallback(null,data);
+        }
+      });
+      npm.on('log', function (message) {
+        // log the progress of the installation
+        console.log(message);
+      });
+    }
+  })
 };
 
 
@@ -152,27 +170,14 @@ var installPeerDeps = function(asyncCallback){
  * @todo try fork
  */
 var start_server = function(asyncCallback) {
-	asyncCallback(null,'started periodicjs_Stub');
-  // child.fork('./periodic_worker');
-  // child.on('message',function(message) {
-  //   console.log('From periodic worker: ' +  message);
-  // });
+ var server =  child.fork(null);
+  server.on('message',function(message) {
+    console.log('From periodic worker: ' +  message);
+  });
 
-  // child.send('npm run nd');
+  server.send('npm run nd');
 
-
-
-//function start_server() {
-	//var server = child.exec('npm start', {
-		//cwd: periodic_cwd
-	//}, function (error, stdout, stderr) {
-		//if (error) {
-			//console.log(error.stack);
-		//}
-		//console.log(stdout);
-	//});
-	//return server;
-//}
+  asyncCallback(null,'started periodicjs_Stub');
 };
 
 
@@ -205,18 +210,17 @@ function kill_server(pid, signal, callback) {
 	}
 };
 
-var clean = function(asyncCallback) {
+var clean = function(callback) {
  fs.remove(previous_dir(),function(err) {
    if (err) {
-    asyncCallback(err) 
+    callback(err) 
    }else{
-   asyncCallback(null,"Cleaned The Stub Directory");
+     callback(null,"Cleaned The Stub Directory");
    }
- }) 
+ });
 }
 
 async.series({
-    clean                         : clean,
 		getPeriodicVersion            : getExtPeriodicVer,
 		installCorrectVersion         : installCorrectVersion,
     getCurrentExtName             : getExtName,
@@ -238,3 +242,4 @@ module.exports.previous_dir = previous_dir;
 module.exports.create_previous_dir = create_previous_dirSync;
 module.exports.remove_previous_dirSync = remove_previous_dirSync;
 module.exports.kill_server = kill_server;
+module.exports.clean = clean;
