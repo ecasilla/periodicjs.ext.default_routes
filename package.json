@@ -24,7 +24,8 @@
     "async": "^0.9.0",
     "fs-extra": "^0.11.0",
     "periodicjs.core.controller": "~1.90.10",
-    "periodicjs.core.extensions": "~1.90.16"
+    "periodicjs.core.extensions": "~1.90.16",
+    "underscore": "^1.7.0"
   },
   "devDependencies": {
     "browserify": "~4.2.1",
@@ -52,7 +53,7 @@
     "uglify-js": "^2.4.15",
     "uglifyify": "^2.5.0"
   },
-  "peerDependencies":{},
+  "peerDependencies": {},
   "keywords": [
     "periodicjs"
   ],

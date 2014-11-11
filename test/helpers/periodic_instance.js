@@ -178,7 +178,7 @@ var start_server = function(asyncCallback) {
   //start one child process
   server.start(1)
 
-  server.send({command:'npm run nd'})
+  server.send({command:'npm',args:['run', 'nd']})
 
   server.on('message',function(type,pid,msg) {
     console.log("child message: " + msg.meta_data + " info: " + msg.info);
