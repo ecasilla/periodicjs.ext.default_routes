@@ -1,6 +1,5 @@
 var Child,
     cp = require('child_process');
-    _ = require('underscore');
 
 module.exports = Child = function() {
 	this.intervalDelay = 2*1000;
@@ -35,29 +34,18 @@ Child.prototype.execute = function(options) {
   var command           = options.command;
   var args              = options.args;
   var child             = cp.spawn(command,args);
-  var self = this
+
   child.stdout.on('data', function(data) {
     console.log('stdout: ' + data);
-    //self.sendMessageToMaster('stdout: ' + data)
   });
 
   child.stderr.on('data', function(data) {
     console.log('stderr: ' + data);
-    //self.sendMessageToMaster('stderr: ' + data)
   });
 
   child.on('exit', function(code) {
     console.log('exit code: ' + code);
-    //self.sendMessageToMaster('exit code: ' + code)
   });
-  //child = cp.exec(command,
-    //function (error, stdout, stderr) {
-      //console.log('stdout: ' + stdout);
-      //console.log('stderr: ' + stderr);
-      //if (error !== null) {
-        //console.log('exec error: ' + error);
-      //}
-    //}); 
 }
 
 var c = new Child();
