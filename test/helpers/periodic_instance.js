@@ -86,7 +86,6 @@ var getExtName = function(asyncCallback) {
     }
     else{
       currentExtensionName = json.name
-      console.log(currentExtensionName);
       asyncCallback(null,currentExtensionName);
     }
   });
@@ -118,9 +117,6 @@ var readPeerDeps = function(asyncCallback){
   	if(err){
   		asyncCallback(err,null);
   	}
-    else if (!json.hasOwnProperty('peerDependencies')){
-      asyncCallback(null,"No Peer Dependencies for this extension!")
-    }
   	else{
 	  	var tempobj = json.peerDependencies; 
       for(var ext in tempobj){
@@ -145,14 +141,20 @@ var installPeerDeps = function(asyncCallback){
     }else{
       npm.config.set("skip_post_install",true)
       console.log(currentExtensionPeerDependencies);
-      npm.commands.install(currentExtensionPeerDependencies, function (err, data) {
-        if (err) {
-          asyncCallback(err,null);
-        }
-        else{
-          asyncCallback(null,data);
-        }
-      });
+      ///If there no peers skip ..
+      if (currentExtensionPeerDependencies === []) {
+        console.log("called if");
+        asynccallback(null,"no peer dependencies found");
+      }else{
+        npm.commands.install(currentExtensionPeerDependencies, function (err, data) {
+          if (err) {
+            asyncCallback(err,null);
+          }
+          else{
+            asyncCallback(null,data);
+          }
+        });
+      }
       npm.on('log', function (message) {
         // log the progress of the installation
         console.log(message);
@@ -171,17 +173,33 @@ var installPeerDeps = function(asyncCallback){
  */
 var start_server = function(asyncCallback) {
 
-var worker = path.resolve(process.cwd(),'test/helpers/periodic_worker'),
-    server = child.fork(worker,[],{cwd:periodic_cwd}),
-    start  = {command:"uptime"};
+var Master = require('./periodic_master');
+var server = new Master();
+server.start(1)
+console.log(server);
 
- server.send(start);
-  server.on('message',function(message) {
-   console.log('From periodic worker: ' +  message);
-  });
-  server.on('close',function() {
-   asyncCallback(null,"server finished") 
-  })
+
+server.on('child message',function(msg) {
+  console.log(msg);
+})
+
+server.on('error',function(error) {
+  asyncCallback(error)
+})
+server.on('disconnect',function() {
+ asyncCallback(null,"Server Disconnected") 
+})
+//var worker = path.resolve(process.cwd(),'test/helpers/periodic_worker'),
+    //server = child.fork(worker,[],{cwd:periodic_cwd}),
+    //start  = {command:"npm run nd"};
+
+ //server.send(start);
+  //server.on('message',function(message) {
+   //console.log('From periodic worker: ' +  message);
+  //});
+  //server.on('close',function() {
+   //asyncCallback(null,"server finished") 
+  //})
 };
 
 

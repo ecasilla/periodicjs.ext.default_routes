@@ -52,6 +52,7 @@
     "uglify-js": "^2.4.15",
     "uglifyify": "^2.5.0"
   },
+  "peerDependencies":{},
   "keywords": [
     "periodicjs"
   ],
