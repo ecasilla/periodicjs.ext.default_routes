@@ -9,35 +9,40 @@ module.exports = Child = function() {
 
 Child.prototype.start = function() {
 	this.interval = setInterval(this.sendMessageToMaster.bind(this),this.intervalDelay);
-	this.sendMessageToMaster();
+	this.sendMessageToMaster(process.cwd());
 };
 
-Child.prototype.execute = function(command) {
- child = cp.exec('cat *.js bad_file | wc -l',
-  function (error, stdout, stderr) {
-    console.log('stdout: ' + stdout);
-    console.log('stderr: ' + stderr);
-    if (error !== null) {
-      console.log('exec error: ' + error);
-    }
-}); 
-}
 
 Child.prototype.sendMessageToMaster = function(extra_message) {
 	var uptime = process.uptime();
-	var message = 'child process interval ['+this.pid+'], uptime '+uptime+'s';
+	var message = 'child process interval ['+this.pid+'], uptime: '+uptime+'s';
+  var info = extra_message;
 	process.send({
-		custom: message,
-    meta_data : extra_message
+		meta_data: message,
+    info : info
 	});
 };
+
+Child.prototype.execute = function(command) {
+  child = cp.exec(command,
+    function (error, stdout, stderr) {
+      console.log('stdout: ' + stdout);
+      console.log('stderr: ' + stderr);
+      if (error !== null) {
+        console.log('exec error: ' + error);
+      }
+    }); 
+}
 
 var c = new Child();
 c.start();
 
 process.on('message',function(msg) {
-  console.log(msg);
-})
+  console.log('master: ' + msg);
+  if (msg.command) {
+   Child.prototype.execute.call(this,msg.command);
+  }
+});
 
 process.on('disconnect',function() {
 	process.kill();

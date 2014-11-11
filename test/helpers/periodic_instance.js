@@ -173,33 +173,23 @@ var installPeerDeps = function(asyncCallback){
  */
 var start_server = function(asyncCallback) {
 
-var Master = require('./periodic_master');
-var server = new Master();
-server.start(1)
-console.log(server);
+  var Master = require('./periodic_master');
+  var server = new Master();
+  //start one child process
+  server.start(1)
 
+  server.send({command:'npm run nd'})
 
-server.on('child message',function(msg) {
-  console.log(msg);
-})
+  server.on('message',function(type,pid,msg) {
+    console.log("child message: " + msg.meta_data + " info: " + msg.info);
+  });
 
-server.on('error',function(error) {
-  asyncCallback(error)
-})
-server.on('disconnect',function() {
- asyncCallback(null,"Server Disconnected") 
-})
-//var worker = path.resolve(process.cwd(),'test/helpers/periodic_worker'),
-    //server = child.fork(worker,[],{cwd:periodic_cwd}),
-    //start  = {command:"npm run nd"};
-
- //server.send(start);
-  //server.on('message',function(message) {
-   //console.log('From periodic worker: ' +  message);
-  //});
-  //server.on('close',function() {
-   //asyncCallback(null,"server finished") 
-  //})
+  server.on('error',function(type,pid,error) {
+    asyncCallback(error)
+  });
+  server.on('disconnect',function(type,pid,msg) {
+    asyncCallback(null,"Server " + "pid: " + pid + " Disconnected") 
+  });
 };
 
 
@@ -261,6 +251,7 @@ async.series({
 });
 
 module.exports.previous_dir = previous_dir;
+module.exports.periodic_cwd = periodic_cwd;
 module.exports.create_previous_dir = create_previous_dirSync;
 module.exports.remove_previous_dirSync = remove_previous_dirSync;
 module.exports.kill_server = kill_server;
