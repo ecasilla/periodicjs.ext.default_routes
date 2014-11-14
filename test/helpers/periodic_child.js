@@ -20,18 +20,17 @@ Child.prototype.sendMessageToMaster = function(message_for_master) {
 	var message = 'child process interval ['+this.pid+'], uptime: '+uptime+'s';
   var info = message_for_master;
 	process.send({
-		meta_data: message,
-    info : info
+		meta_data: message
 	});
 };
 
 /**
  * description This method allow us to execute shell commands
- * @param {string} It takes a string command seperated by 
+ * @param {object} It takes a string command seperated by 
  * a space and then spawn a new process to execute it
  */
 Child.prototype.execute = function(options) {
-  var command           = options.command;
+  var command           = options.command || options.cmd;
   var args              = options.args;
   var child             = cp.spawn(command,args);
 
@@ -48,8 +47,6 @@ Child.prototype.execute = function(options) {
   });
 }
 
-var c = new Child();
-c.start();
 
 process.on('message',function(msg) {
   console.dir('from master: ' + msg.command);
@@ -61,3 +58,6 @@ process.on('message',function(msg) {
 process.on('disconnect',function() {
 	process.kill();
 });
+
+var c = new Child();
+c.start();

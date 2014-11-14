@@ -24,13 +24,13 @@
     "async": "^0.9.0",
     "fs-extra": "^0.11.0",
     "periodicjs.core.controller": "~1.90.10",
-    "periodicjs.core.extensions": "~1.90.16",
-    "underscore": "^1.7.0"
+    "periodicjs.core.extensions": "~1.90.16"
   },
   "devDependencies": {
     "browserify": "~4.2.1",
     "chai": "^1.9.2",
     "chai-fs": "^0.1.0",
+    "chai-http": "^1.0.0",
     "grunt": ">=0.4.5",
     "grunt-browserify": ">=2.1.3",
     "grunt-contrib-copy": ">=0.5.0",
@@ -45,7 +45,6 @@
     "grunt-simple-mocha": ">=0.4.0",
     "jsdoc": "3.3.0-alpha5",
     "mocha": "1.9.0",
-    "nexpect": "^0.4.2",
     "npm": "^2.1.5",
     "pow-mongodb-fixtures": "^0.10.0",
     "ps-tree": "0.0.3",
