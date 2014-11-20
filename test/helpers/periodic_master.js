@@ -8,6 +8,7 @@ var Master,
 
 module.exports = Master = function() {
 	this.threads = {};
+  this.child;
 };
 
 util.inherits(Master,events.EventEmitter);
@@ -32,22 +33,13 @@ Master.prototype.start = function(numThreads) {
 		child.on('message',onMessage);
 		child.on('error',onError);
 		child.on('disconnect',onDisconnect);
-    //in order to send messages refer to num threads you passed in 
-		that.threads[i] = child.pid
+    this.child = child
+		that.threads[child.pid] = child;
 	}
 };
 
-/**
- * @description The method allows you to send messages to the child process
- * @param {object} The message need to be an object
- * that impelments this style object {command:'rm',args:['-rf','path/']},pid) 
- */
-
-Master.prototype.send = function(message,pid) {
-if ( typeof pid === 'undefined' ) {
-  throw new Error("Pid need in order to send message");
- }
- this.threads[pid].send(message);
+Master.prototype.send = function(message) {
+ this.child.send(message);
 }
 
 Master.prototype.stop = function(pid) {

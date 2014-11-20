@@ -23,6 +23,7 @@
   "dependencies": {
     "async": "^0.9.0",
     "fs-extra": "^0.11.0",
+    "lodash": "^2.4.1",
     "periodicjs.core.controller": "~1.90.10",
     "periodicjs.core.extensions": "~1.90.16"
   },
