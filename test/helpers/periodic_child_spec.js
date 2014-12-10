@@ -6,6 +6,7 @@ var expect  = require('chai').expect,
     http    = require('chai-http'),
     Child   = require('./periodic_child'),
     Master = require('./periodic_master'),
+    previous_dir = require("./periodic_instance").previous_dir,
     stubCWD = path.resolve(previous_dir(), 'periodic_Stub/node_modules/periodicjs/');
     context = describe;
     chai.use(require('chai-fs'))
@@ -13,20 +14,20 @@ var expect  = require('chai').expect,
 
 describe('Child Process: ', function(){
  context('Method Signitures',function() {
-   it('should be able to send message to master', function(done){
-     
+   xit('should be able to send message to master', function(done){
+     done();
    });
-   it('should be able to execute messages sent from master', function(){
-     
+   xit('should be able to execute messages sent from master', function(done){
+   done(); 
    });
-   it('should send a heart beat every two seconds', function(){
-     
+   xit('should send a heart beat every two seconds', function(done){
+   done(); 
    });
-   it('should close if theres no master', function(){
-     
+   xit('should close if theres no master', function(done){
+    done(); 
    });
-   it('should stream the log message back to the master process', function(){
-     
+   xit('should stream the log message back to the master process', function(done){
+    done(); 
    });
  }) 
 });

@@ -5,6 +5,7 @@ var npm                  = require('npm'),
     fs                   = require('fs-extra'),
     async                = require('async'),
     child                = require('child_process'),
+    util                 = require('util'),
     currentExtensionName = '',
 
 	previous_dir = function() {
@@ -19,6 +20,15 @@ var npm                  = require('npm'),
 	periodic_cwd = path.resolve(previous_dir(), 'node_modules/periodicjs/'),
 	periodic_version,
 	currentExtensionPeerDependencies = [];
+
+  function inspector(obj) {
+      "use strict";
+      return util.inspect(obj, {
+        showHidden: true,
+        colors: true,
+        depth: null
+      });
+    }
 
 /**
  * gets the periodic version number from periodic.ext.json
@@ -112,17 +122,22 @@ var copyExt = function(asyncCallback){
  * @param  {Function} asyncCallback async callback function
  */
 var readPeerDeps = function(asyncCallback){
-  var current_ext_package_json = path.resolve(process.cwd(),'./package.json');
+  var current_ext_package_json = path.resolve(process.cwd(),'periodicjs.ext.json');
   fs.readJson(current_ext_package_json,function(err,json) {
-  	if(err){
-  		asyncCallback(err,null);
-  	}
-  	else{
-	  	var tempobj = json.peerDependencies; 
-      for(var ext in tempobj){
-       currentExtensionPeerDependencies.push(ext);
+    if(err){
+      asyncCallback(err,null);
+    }
+    else{
+      var tempobj = json.periodicDependencies;
+      console.log(inspector(tempobj))
+      if(tempobj && tempobj.length > 0){
+        for(var ext in tempobj){
+          currentExtensionPeerDependencies.push(ext);
+        }
+        asyncCallback(null,currentExtensionPeerDependencies);
+      }else{
+        asyncCallback(null,tempobj);
       }
-	  	asyncCallback(null,currentExtensionPeerDependencies);
   	}
   });
 };
@@ -142,9 +157,9 @@ var installPeerDeps = function(asyncCallback){
       npm.config.set("skip_post_install",true)
       console.log(currentExtensionPeerDependencies);
       ///If there no peers skip ..
-      if (currentExtensionPeerDependencies === []) {
+      if (currentExtensionPeerDependencies.length === 0) {
         console.log("called if");
-        asynccallback(null,"no peer dependencies found");
+        asyncCallback(null,"no peer dependencies found");
       }else{
         npm.commands.install(currentExtensionPeerDependencies, function (err, data) {
           if (err) {
@@ -238,8 +253,7 @@ async.series({
     readExtensionPeerDependencies : readPeerDeps,
     getCurrentExtName             : getExtName,
 		copyExtentionToPeriodicStub   : copyExt,
-		installExtPeerDeps            : installPeerDeps,
-		startPeriodicStubServer       : start_server
+		installExtPeerDeps            : installPeerDeps
 	},
 	function(err,status){
 		if(err){

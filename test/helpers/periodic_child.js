@@ -10,20 +10,22 @@ module.exports = Child = function() {
 
 Child.prototype.start = function() {
 	this.interval = setInterval(this.sendMessageToMaster.bind(this),this.intervalDelay);
-	this.sendMessageToMaster();
 };
+
 /**
  * description Send a message back to the master process on an interval
  * @params {object} What ever you want to send back to master process
  */
-Child.prototype.sendMessageToMaster = function(message_for_master) {
+Child.prototype.sendMessageToMaster = function() {
 	var uptime = process.uptime();
 	var message = 'child process interval ['+this.pid+'], uptime: '+uptime+'s';
-  var info = message_for_master;
+  if(!process.send){
+    process.stdout.write(message);
+  }else{
 	process.send({
-		meta_data: message,
-    info : info
+		meta_data: message
 	});
+  }
 };
 
 /**
@@ -50,14 +52,6 @@ Child.prototype.execute = function(options) {
     console.log('exit code: ' + code);
     //self.sendMessageToMaster('exit code: ' + code)
   });
-  //child = cp.exec(command,
-    //function (error, stdout, stderr) {
-      //console.log('stdout: ' + stdout);
-      //console.log('stderr: ' + stderr);
-      //if (error !== null) {
-        //console.log('exec error: ' + error);
-      //}
-    //}); 
 }
 
 var c = new Child();
